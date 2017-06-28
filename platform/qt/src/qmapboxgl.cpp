@@ -1,5 +1,6 @@
 #include "qmapboxgl.hpp"
 #include "qmapboxgl_p.hpp"
+#include "qrenderer_frontend.hpp"
 
 #include "qt_conversion.hpp"
 #include "qt_geojson.hpp"
@@ -1430,7 +1431,7 @@ void QMapboxGL::render()
     mbgl::BackendScope scope { *d_ptr, mbgl::BackendScope::ScopeType::Implicit };
 
     d_ptr->dirty = false;
-    d_ptr->mapObj->render(*d_ptr);
+    d_ptr->render();
 }
 
 /*!
@@ -1469,6 +1470,8 @@ void QMapboxGL::connectionEstablished()
     \a copyrightsHtml is a string with a HTML snippet.
 */
 
+class QRendererFrontend;
+
 QMapboxGLPrivate::QMapboxGLPrivate(QMapboxGL *q, const QMapboxGLSettings &settings, const QSize &size_, qreal pixelRatio)
     : QObject(q)
     , size(size_)
@@ -1479,7 +1482,13 @@ QMapboxGLPrivate::QMapboxGLPrivate(QMapboxGL *q, const QMapboxGLSettings &settin
         settings.cacheDatabaseMaximumSize()))
     , threadPool(mbgl::sharedThreadPool())
 {
+    // Setup and connect the renderer frontend
+    auto frontend = std::make_unique<QRendererFrontend>(*this, *this);
+    connect(this, SIGNAL(renderRequested()), frontend.get(), SLOT(render()), Qt::DirectConnection);
+    connect(frontend.get(), SIGNAL(updated()), this, SLOT(invalidate()), Qt::DirectConnection);
+    
     mapObj = std::make_unique<mbgl::Map>(
+            std::move(frontend),
             *this, sanitizedSize(size),
             pixelRatio, *fileSourceObj, *threadPool,
             mbgl::MapMode::Continuous,
@@ -1521,6 +1530,11 @@ void QMapboxGLPrivate::invalidate()
         emit needsRendering();
         dirty = true;
     }
+}
+
+void QMapboxGLPrivate::render()
+{
+    emit renderRequested();
 }
 
 void QMapboxGLPrivate::onCameraWillChange(mbgl::MapObserver::CameraChangeMode mode)
