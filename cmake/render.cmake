@@ -1,4 +1,5 @@
 add_executable(mbgl-render
+    platform/default/mbgl/renderer/async_renderer_frontend
     bin/render.cpp
 )
 
