@@ -1,4 +1,5 @@
 #include "glfw_view.hpp"
+#include "glfw_renderer_frontend.hpp"
 #include "settings_json.hpp"
 
 #include <mbgl/util/default_styles.hpp>
@@ -120,9 +121,7 @@ int main(int argc, char *argv[]) {
     }
 
     mbgl::ThreadPool threadPool(4);
-
-    mbgl::Map map(backend, view->getSize(), view->getPixelRatio(), fileSource, threadPool);
-
+    mbgl::Map map(std::make_unique<GLFWRendererFrontend>(backend), backend, view->getSize(), view->getPixelRatio(), fileSource, threadPool);
     backend.setMap(&map);
 
     // Load settings
