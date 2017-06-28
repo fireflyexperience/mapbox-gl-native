@@ -39,6 +39,8 @@ void Renderer::Impl::setObserver(RendererObserver* observer_) {
 }
 
 void Renderer::Impl::render(Backend& backend, View& view, const UpdateParameters& updateParameters) {
+    // Don't load/render anyting in still mode until explicitly requested.
+    if (updateParameters.mode == MapMode::Still && !updateParameters.stillImageRequest) return;
 
     // Update render style
     renderStyle->update(updateParameters);

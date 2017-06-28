@@ -777,7 +777,8 @@ void Map::Impl::onUpdate(Update flags) {
             style->impl->getLayerImpls(),
             scheduler,
             fileSource,
-            annotationManager
+            annotationManager,
+            bool(stillImageRequest)
     };
 
     rendererFrontend->update(std::make_shared<UpdateParameters>(std::move(params)));

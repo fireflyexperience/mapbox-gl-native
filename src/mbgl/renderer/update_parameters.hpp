@@ -39,6 +39,9 @@ public:
     Scheduler& scheduler;
     FileSource& fileSource;
     AnnotationManager& annotationManager;
+    
+    // For still image requests, render requested
+    const bool stillImageRequest;
 };
 
 } // namespace mbgl
